@@ -1,81 +1,114 @@
-export {TSElement};
-class TSElement<Action> {
-  private text: string;
-  constructor(
-    private tag?: string,
-    private attributes: {[key: string]: string} = {},
-    private children: TSElement<Action>[] = [],
-    private listeners: Map<string, Action[]> = new Map<string, Action[]>()){}
+export {TNode};
+import {h} from "virtual-dom";
+
+interface ITNode<Action>{
+  tag?: string;
+  id?: string;
+  classes?: string[];
+  styles?: {[k:string]:string};
+  attributes?: {[k:string]: string};
+  children?: TNode<Action>[];
+  actions?: {[k:string]: Action[]};
+  text?: string;
+  value?: string;
+}
+
+class TNode<Action> implements ITNode<Action> {
+  public tag: string = null;
+  public id: string = undefined;
+  public classes: string[] = [];
+  public styles: {[k:string]:string} = {};
+  public attributes: {[k:string]: string} = {};
+  public children: TNode<Action>[] = [];
+  public actions: {[k:string]: Action[]} = {};
+  public text: string = "";
+  public value: string = "";
+  
+  constructor(other: ITNode<Action>){
+    Object.assign(this, other);
+    Object.freeze(this);
+  }
+  
+  $classes(classes: string[]){
+    return this.cloneWith({classes});
+  }
+  
+  $id(id: string){
+    return this.cloneWith({id});
+  }
+  
+  $children(children: TNode<Action>[]){
+    return this.cloneWith({children})
+  }
+  
+  $text(text: string){
+    return this.cloneWith({text});
+  }
+  
+  $value(value: string){
+    return this.cloneWith({value});
+  }
+  
+  $attributes(attributes: {[k:string]:string}){
+    return this.cloneWith({attributes})
+  }
+  
+  $on(eventName: string, action: Action){
+    return this.cloneWith({
+      actions: Object.assign({
+        eventName: action
+      }, this.actions)
+    })
+  }
+  
+  toNode(): Node {    
+    let elem = document.createElement(this.tag);
     
-  $children(__children: TSElement<Action>[]): TSElement<Action>{ 
-    return this.__cloneWith((instance) => {
-      instance.children = instance.children.concat(__children);
-    })
-  }
-  
-  $attributes(__attributes: {[key: string]: string}): TSElement<Action> {
-    return this.__cloneWith((instance) => {
-      instance.attributes = Object.assign({}, __attributes, this.attributes)
-    });
-  }
-  
-  $text(__text: string){
-    return this.__cloneWith((instance) => {
-      instance.text = __text;
-    })
-  }
-  
-  $onclick(action: Action): TSElement<Action>{
-    return this.__cloneWith((instance) => {
-      instance.listeners["click"] =
-        instance.listeners["click"].append(action);
-    })
-  }
-  
-  $classes(_classes: string[]): TSElement<Action> {
-    return this.__cloneWith((instance: TSElement<Action>) => {
-      if(!instance.attributes["class"]){
-        instance.attributes["class"] = "";
-      }
-      let instanceClasses = instance.attributes["class"];
-      _classes.forEach((_class) => {
-        if(instanceClasses.indexOf(_class) < 0){
-          instanceClasses += " " + _class;
-        }
-      });
-    })
-  }
-  
-  private __cloneWith(updater: (element: TSElement<Action>) => void):
-    TSElement<Action>{
-    let newElement: TSElement<Action> = new TSElement<Action>(
-      this.tag,
-      this.attributes,
-      this.children,
-      this.listeners
-    )
-    updater(newElement);
-    return Object.freeze(newElement);
-  }
-  
-  public toNode(): Node {
-    if(!this.tag){
-      return document.createTextNode(this.text);
-    }
-    let elem = document.createElement(this.tag);    
     if(this.text){
       elem.innerText = this.text;
     }
-    for(let key of Object.keys(this.attributes)){
-      elem.setAttribute(key, this.attributes[key]);
+    
+    if(this.id){
+      elem.id = this.id;
     }
-    this.children.forEach(child => {
+    if(this.classes.length){
+      elem.setAttribute("class", this.classes.reduce(
+        (previous, current) => `${previous} ${current}`, ""
+      ))
+    }
+    if(this.value){
+      if(elem instanceof HTMLInputElement)
+        elem.value = this.value;
+    }
+    this.children.forEach((child) => {
       elem.appendChild(child.toNode());
-    })
+    });
+    
     return elem;
   }
+  
+  toVNode() {
+    let attrs = Object.assign(
+      {
+        id: this.id,
+      }, this.attributes
+    );
+    if(this.value){
+      attrs["value"] = this.value;
+    }
+    let vdom = h(
+      this.tag + this.classes.reduce((previous, current) =>
+          `.${current} ${previous}`,""),
+      attrs,
+      [this.text, ...this.children.map(c => c.toVNode())]);
+    return vdom;
+  }
+  
+  cloneWith(other: ITNode<Action>): TNode<Action> {
+    return new TNode<Action>(Object.assign({}, this, other));
+  }
+  
 }
-
 function createSelectorString (classes: string[], id: string = ""){
   let classString = classes.reduce((a, b) => `.${a}${b}` , '')
   if(id.length){
@@ -107,19 +140,29 @@ function selectorStringToAttributes (
   return  obj;
 }
 
+const selectorsToClasses = (selectors: string[]): string[] => {
+  return selectors
+    .filter(s => s.startsWith("."))
+    .map(s => s.substr(1))
+    .filter(s => s.length > 0);
+}
+
+const selectorStringToId = (selectors: string[]) => {
+  return selectors
+    .filter(s => s.startsWith("#"))
+    .map(s => s.substr(1))[0];
+}
 
 const createTag = <Action>(tag?: string) => {
-  return  <Action>(selectorString: string = ""): TSElement<Action> => {
-    return (new TSElement<Action>(tag))
-      .$attributes(selectorStringToAttributes(selectorString));
+  return  <Action>(selectorString: string = ""): TNode<Action> => {
+    let selectors = selectorString.split(/\s+/);
+    return (new TNode<Action>({tag: tag}))
+      .$classes(selectorsToClasses(selectors))
+      .$id(selectorStringToId(selectors));
   }
 }
 
-export const text = function<Action>(text: string){
-  return (new TSElement<Action>().$text(text))
-};
-
-export const a = createTag('a');
+export const a = createTag('a')
 export const abbr = createTag('abbr');
 export const address = createTag('address');
 export const area = createTag('area');

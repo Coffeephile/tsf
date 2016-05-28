@@ -1,6 +1,6 @@
 {
   "name": "brunch-with-typescript",
-  "version": "1.0.1",
+  "version": "0.0.2",
   "description": "Brunch with TypeScript",
   "scripts": {
     "start": "brunch watch --server",
@@ -13,5 +13,6 @@
     "uglify-js-brunch": "^2.0.1"
   },
   "dependencies": {
+    "virtual-dom": "^2.1.1"
   }
 }
