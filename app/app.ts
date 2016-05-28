@@ -1,7 +1,7 @@
 declare var require: any;
 let {patch, diff, h, create} = require("virtual-dom");
 let {div, button, span} = require("hyperscript-helpers")(h);
-
+ 
 function mount<S, A>(
   render: (S, dispatch: ((action: A) => any)) => any,
   reducer: (S, A) => S,
