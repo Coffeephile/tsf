@@ -13,8 +13,5 @@
     "uglify-js-brunch": "^2.0.1"
   },
   "dependencies": {
-    "hyperscript-helpers": "^2.1.1",
-    "ramda": "^0.21.0",
-    "virtual-dom": "^2.1.1"
   }
 }
