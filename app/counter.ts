@@ -1,7 +1,11 @@
 import {div, span, button} from "./tsf/dom";
-import {Store} from "./tsf/store";
+import {Store, createStore} from "./tsf/store";
 
-const counter = (counterStore: Store<CounterState, CounterAction>) => {
+type CounterState = number;
+type CounterAction = string;
+type CounterStore = Store<CounterState, CounterAction>;
+
+const counter = (counterStore: CounterStore) => {
   let count = counterStore.state;
   return div("#counter").$children([
     button().$text("Decrement").
@@ -21,13 +25,11 @@ const counterReducer =
   }
   return state;
 }
-
-
-type CounterState = number;
-type CounterAction = string;
+let counterStore = createStore<CounterState, CounterAction>
+  (0, counterReducer);
+  
 export {
   counter,
-  counterReducer,
-  CounterState,
-  CounterAction,
+  CounterStore,
+  counterStore
 }

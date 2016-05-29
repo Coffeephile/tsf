@@ -1,10 +1,10 @@
 import {div, button,span, input, TNode} from "./tsf/dom";
 import {mount} from "./tsf/core";
 import {createStore, Store} from "./tsf/store";
-import {counter, CounterState, CounterAction, counterReducer} 
+import {counter, counterStore, CounterStore} 
   from "./counter";
 
-import {myForm, MyFormAction, MyFormState, myFormReducer}
+import {myForm, myFormStore, MyFormStore}
   from "./myForm";
 
 let app = ({counterStore, myFormStore}): TNode => {
@@ -16,8 +16,11 @@ let app = ({counterStore, myFormStore}): TNode => {
   );  
 }
 
+interface IStores {
+  counterStore: CounterStore,
+  myFormStore: MyFormStore
+}
 
-mount(app, {
-  counterStore: createStore<CounterState, CounterAction>(0, counterReducer),
-  myFormStore: createStore<MyFormState, MyFormAction>({name: ""}, myFormReducer)
+mount<IStores>(app, {
+  counterStore, myFormStore
 }, document.body)

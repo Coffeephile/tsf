@@ -1,27 +1,26 @@
-import {Store} from "./tsf/store";
+import {Store, createStore} from "./tsf/store";
 import {div, input, span} from "./tsf/dom";
 
 let myForm = (store: Store<MyFormState, MyFormAction>) => {
   return div("#myform").$children([
     input().
-      $value(store.state.name).
+      $value(store.state).
       $on('keyup', (event) => {
-        store.dispatch({name: event.target.value || ""})
+        store.dispatch(event.target.value || "")
       }),
-    span().$text(store.state.name).$style({
+    span().$text(store.state).$style({
       color: "red"
     })])
 }
-interface MyFormState {
-  name: string
-}
-interface MyFormAction {
-  name: string
-}
+type MyFormState = string;
+type MyFormAction = string;
+
 const myFormReducer = 
   (state: MyFormState, action: MyFormAction): MyFormState => {
     return action
   }
+type MyFormStore = Store<MyFormState, MyFormAction>
+let myFormStore = createStore<MyFormState, MyFormAction>("", myFormReducer); 
 export {
-  MyFormAction, MyFormState, myFormReducer, myForm
+  myForm, myFormStore, MyFormStore
 }
