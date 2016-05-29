@@ -1,30 +1,31 @@
 export {TNode};
-import {h} from "virtual-dom";
+import {h, create} from "virtual-dom";
 
-interface ITNode<Action>{
+interface ITNode{
   tag?: string;
   id?: string;
   classes?: string[];
-  styles?: {[k:string]:string};
+  style?: {[k:string]:string};
   attributes?: {[k:string]: string};
-  children?: TNode<Action>[];
-  actions?: {[k:string]: Action[]};
+  children?: TNode[];
   text?: string;
   value?: string;
+  listeners?: {[k:string]: Function}
 }
 
-class TNode<Action> implements ITNode<Action> {
+
+class TNode implements ITNode {
   public tag: string = null;
   public id: string = undefined;
   public classes: string[] = [];
-  public styles: {[k:string]:string} = {};
+  public style: {[k:string]:string} = {};
   public attributes: {[k:string]: string} = {};
-  public children: TNode<Action>[] = [];
-  public actions: {[k:string]: Action[]} = {};
+  public children: TNode[] = [];
   public text: string = "";
   public value: string = "";
+  public listeners: {[k:string]: Function} = {};
   
-  constructor(other: ITNode<Action>){
+  constructor(other: ITNode){
     Object.assign(this, other);
     Object.freeze(this);
   }
@@ -37,7 +38,7 @@ class TNode<Action> implements ITNode<Action> {
     return this.cloneWith({id});
   }
   
-  $children(children: TNode<Action>[]){
+  $children(children: TNode[]){
     return this.cloneWith({children})
   }
   
@@ -53,59 +54,48 @@ class TNode<Action> implements ITNode<Action> {
     return this.cloneWith({attributes})
   }
   
-  $on(eventName: string, action: Action){
+  $on(eventName: string, callback){
+    let obj = {};
+    obj[eventName] = callback;
     return this.cloneWith({
-      actions: Object.assign({
-        eventName: action
-      }, this.actions)
+      listeners: Object.assign(obj, this.listeners)
     })
   }
   
-  toNode(): Node {    
-    let elem = document.createElement(this.tag);
-    
-    if(this.text){
-      elem.innerText = this.text;
-    }
-    
-    if(this.id){
-      elem.id = this.id;
-    }
-    if(this.classes.length){
-      elem.setAttribute("class", this.classes.reduce(
-        (previous, current) => `${previous} ${current}`, ""
-      ))
-    }
-    if(this.value){
-      if(elem instanceof HTMLInputElement)
-        elem.value = this.value;
-    }
-    this.children.forEach((child) => {
-      elem.appendChild(child.toNode());
-    });
-    
-    return elem;
+  $style(style: {[k:string]:string}){
+    return this.cloneWith({
+      style: Object.assign({}, this.style, style)
+    })
+  }
+  
+  toNode(): Node {
+    return create(this.toVNode());
   }
   
   toVNode() {
     let attrs = Object.assign(
       {
         id: this.id,
+        style: this.style,
       }, this.attributes
     );
     if(this.value){
       attrs["value"] = this.value;
     }
+    let listeners = {};
+    for(let eventName of Object.keys(this.listeners)){
+      listeners[`on${eventName}`] = this.listeners[eventName];
+    }
     let vdom = h(
       this.tag + this.classes.reduce((previous, current) =>
           `.${current} ${previous}`,""),
-      attrs,
+      Object.assign(listeners, attrs),
       [this.text, ...this.children.map(c => c.toVNode())]);
     return vdom;
   }
   
-  cloneWith(other: ITNode<Action>): TNode<Action> {
-    return new TNode<Action>(Object.assign({}, this, other));
+  cloneWith(other: ITNode): TNode {
+    return new TNode(Object.assign({}, this, other));
   }
   
 }
@@ -153,10 +143,10 @@ const selectorStringToId = (selectors: string[]) => {
     .map(s => s.substr(1))[0];
 }
 
-const createTag = <Action>(tag?: string) => {
-  return  <Action>(selectorString: string = ""): TNode<Action> => {
+const createTag = (tag?: string) => {
+  return  (selectorString: string = ""): TNode => {
     let selectors = selectorString.split(/\s+/);
-    return (new TNode<Action>({tag: tag}))
+    return (new TNode({tag: tag}))
       .$classes(selectorsToClasses(selectors))
       .$id(selectorStringToId(selectors));
   }

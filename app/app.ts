@@ -1,26 +1,23 @@
 import {div, button,span, input, TNode} from "./tsf/dom";
-import {create} from "virtual-dom";
+import {mount} from "./tsf/core";
+import {createStore, Store} from "./tsf/store";
+import {counter, CounterState, CounterAction, counterReducer} 
+  from "./counter";
 
-type IAction = string;
-type IState = {
-  count: number;
-  name: string;
-};
+import {myForm, MyFormAction, MyFormState, myFormReducer}
+  from "./myForm";
 
-let app = (state: IState): TNode<any> => {
+let app = ({counterStore, myFormStore}): TNode => {
   return (
-    div("#counter .container .app").$children([
-      input().$value(state.name),
-      div().$children([
-        button().$text("Decrement")
-          .$on("click", "decrement"),
-        span().$text(state.count.toString()),
-        button().$text("Increment")
-          .$on("click", "incrememnt")  
-      ])      
-    ]));  
+    div("#app .container .app").$children([
+      myForm(myFormStore),
+      counter(counterStore)
+    ])
+  );  
 }
 
-document.body.appendChild(
-  create(app({count: 0, name: "asdf"}).toVNode())
-);
+
+mount(app, {
+  counterStore: createStore<CounterState, CounterAction>(0, counterReducer),
+  myFormStore: createStore<MyFormState, MyFormAction>({name: ""}, myFormReducer)
+}, document.body)
