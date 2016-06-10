@@ -1,5 +1,5 @@
 {
-  "dependencies": {
-    "ramda": "registry:npm/ramda#0.21.0+20160526170405"
+  "globalDependencies": {
+    "virtual-dom": "registry:dt/virtual-dom#2.0.1+20160317120654"
   }
 }

@@ -1,15 +1,15 @@
-import {div, button,span, input, TNode} from "./tsf/dom";
 import {mount} from "./tsf/core";
 import {createStore, Store} from "./tsf/store";
+import {h, VNode} from "virtual-dom";
 import {counter, counterStore, CounterStore} 
   from "./counter";
 
 import {myForm, myFormStore, MyFormStore}
   from "./myForm";
 
-let app = ({counterStore, myFormStore}): TNode => {
+let app = ({counterStore, myFormStore}: IStores): VNode => {
   return (
-    div("#app .container .app").$children([
+    h("div#app.container.app", [
       myForm(myFormStore),
       counter(counterStore)
     ])

@@ -1,16 +1,16 @@
 import {Store, createStore} from "./tsf/store";
-import {div, input, span} from "./tsf/dom";
+import {h} from "virtual-dom";
+
 
 let myForm = (store: Store<MyFormState, MyFormAction>) => {
-  return div("#myform").$children([
-    input().
-      $value(store.state).
-      $on('keyup', (event) => {
+  return h("div#myform", [
+    h("input", {
+      onkeyup: (event) => {
         store.dispatch(event.target.value || "")
-      }),
-    span().$text(store.state).$style({
-      color: "red"
-    })])
+      }
+    }, store.state),
+    h("span", store.state)
+  ]);
 }
 type MyFormState = string;
 type MyFormAction = string;

@@ -4,7 +4,7 @@ Minimal redux like framework meant as a tutorial for flux architecture.
 
 ## Running
 ```
-npm install -g typescript brunch
+npm install -g brunch
 git clone https://github.com/dhruvrajvanshi/tsf
 cd tsf
 npm install

@@ -1,4 +1,4 @@
-import {div, span, button} from "./tsf/dom";
+import {h} from "virtual-dom";
 import {Store, createStore} from "./tsf/store";
 
 type CounterState = number;
@@ -7,12 +7,14 @@ type CounterStore = Store<CounterState, CounterAction>;
 
 const counter = (counterStore: CounterStore) => {
   let count = counterStore.state;
-  return div("#counter").$children([
-    button().$text("Decrement").
-      $on('click', () => counterStore.dispatch("decrement")),
-    span().$text(count.toString()),
-    button().$text("Increment").
-      $on('click', () => counterStore.dispatch("increment"))
+  return h("div#counter", [
+    h("button",{
+      onclick: () => counterStore.dispatch("decrement")
+    }, "Decrement"),
+    h("span", count.toString()),
+    h("button", {
+      onclick: () => counterStore.dispatch("increment")
+    }, "Increment")
   ])
 }
 

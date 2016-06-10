@@ -1,4 +1,3 @@
-
 export class Store<State, Action> {
   state: State;
   private listeners: ((State) => any)[] = [];
